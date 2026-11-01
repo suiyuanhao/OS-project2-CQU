@@ -1,0 +1,1 @@
+savedcmd_/home/student/os-kernel-labs/01-c-hello/c_hello.mod := printf '%s\n'   c_hello.o | awk '!x[$$0]++ { print("/home/student/os-kernel-labs/01-c-hello/"$$0) }' > /home/student/os-kernel-labs/01-c-hello/c_hello.mod
