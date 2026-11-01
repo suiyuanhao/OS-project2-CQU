@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+  <title id="title">实验一：内核模块生命周期对比</title>
+  <desc id="desc">展示 C 的 init/exit 函数与 Rust 的 Module trait、Result 和 Drop 生命周期对比。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#0B1220"/><stop offset="1" stop-color="#17233D"/></linearGradient>
+    <linearGradient id="rust" x1="0" x2="1"><stop stop-color="#E26D5A"/><stop offset="1" stop-color="#F5A65B"/></linearGradient>
+    <linearGradient id="c" x1="0" x2="1"><stop stop-color="#3984C6"/><stop offset="1" stop-color="#62B6E8"/></linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="12" stdDeviation="14" flood-color="#000" flood-opacity=".28"/></filter>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="#CBD5E1"/></marker>
+  </defs>
+  <rect width="1600" height="900" fill="url(#bg)"/>
+  <circle cx="1450" cy="100" r="190" fill="#2D6CDF" opacity=".08"/><circle cx="120" cy="820" r="230" fill="#E26D5A" opacity=".06"/>
+  <text x="100" y="105" fill="#F8FAFC" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="42" font-weight="700">实验一 · 最小内核模块</text>
+  <text x="100" y="150" fill="#94A3B8" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="22">从“函数 + 宏约定”到“类型化接口 + 生命周期托管”</text>
+  <rect x="100" y="210" width="650" height="560" rx="24" fill="#111C31" stroke="#3984C6" stroke-width="2" filter="url(#shadow)"/>
+  <rect x="850" y="210" width="650" height="560" rx="24" fill="#111C31" stroke="#E26D5A" stroke-width="2" filter="url(#shadow)"/>
+  <rect x="100" y="210" width="650" height="82" rx="24" fill="url(#c)"/><rect x="850" y="210" width="650" height="82" rx="24" fill="url(#rust)"/>
+  <text x="145" y="263" fill="#06111F" font-family="Microsoft YaHei, sans-serif" font-size="30" font-weight="700">C · 显式回调链</text>
+  <text x="895" y="263" fill="#25100B" font-family="Microsoft YaHei, sans-serif" font-size="30" font-weight="700">Rust · 类型化模块</text>
+  <g font-family="Microsoft YaHei, sans-serif" font-size="24" fill="#F8FAFC">
+    <rect x="160" y="350" width="530" height="86" rx="16" fill="#1D3557"/><text x="190" y="403">module_init(c_hello_init)</text>
+    <rect x="160" y="500" width="530" height="86" rx="16" fill="#1D3557"/><text x="190" y="553">return 0 / 错误码约定</text>
+    <rect x="160" y="650" width="530" height="86" rx="16" fill="#1D3557"/><text x="190" y="703">module_exit(c_hello_exit)</text>
+    <rect x="910" y="350" width="530" height="86" rx="16" fill="#3A2430"/><text x="940" y="403">module! { type, license, ... }</text>
+    <rect x="910" y="500" width="530" height="86" rx="16" fill="#3A2430"/><text x="940" y="553">Module::init → Result&lt;Self&gt;</text>
+    <rect x="910" y="650" width="530" height="86" rx="16" fill="#3A2430"/><text x="940" y="703">Drop::drop → 自动清理</text>
+  </g>
+  <g stroke="#CBD5E1" stroke-width="4" fill="none" marker-end="url(#arrow)"><path d="M425 436 V493"/><path d="M425 586 V643"/><path d="M1175 436 V493"/><path d="M1175 586 V643"/></g>
+  <g font-family="Microsoft YaHei, sans-serif" font-size="21" fill="#94A3B8"><text x="100" y="835">加载：insmod</text><text x="1330" y="835">卸载：rmmod</text></g>
+  <path d="M760 490 H840" stroke="#64748B" stroke-width="3" stroke-dasharray="9 9"/>
+  <text x="800" y="463" text-anchor="middle" fill="#94A3B8" font-family="Microsoft YaHei, sans-serif" font-size="20">同一内核入口</text>
+</svg>

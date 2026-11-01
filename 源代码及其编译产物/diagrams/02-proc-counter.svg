@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+  <title id="title">实验二：/proc 计数器安全路径</title>
+  <desc id="desc">展示用户态读写 /proc 后，C 使用互斥锁和手动错误码，Rust 使用原子类型、Result 和有界格式化。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#0B1220"/><stop offset="1" stop-color="#17233D"/></linearGradient>
+    <linearGradient id="blue" x1="0" x2="1"><stop stop-color="#3984C6"/><stop offset="1" stop-color="#62B6E8"/></linearGradient>
+    <linearGradient id="orange" x1="0" x2="1"><stop stop-color="#E26D5A"/><stop offset="1" stop-color="#F5A65B"/></linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="12" stdDeviation="14" flood-color="#000" flood-opacity=".28"/></filter>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="#CBD5E1"/></marker>
+  </defs>
+  <rect width="1600" height="900" fill="url(#bg)"/>
+  <text x="90" y="95" fill="#F8FAFC" font-family="Microsoft YaHei, sans-serif" font-size="40" font-weight="700">实验二 · /proc 数值计数器</text>
+  <text x="90" y="140" fill="#94A3B8" font-family="Microsoft YaHei, sans-serif" font-size="22">一次读写请求，三道安全关：并发、输入、输出</text>
+  <rect x="90" y="215" width="250" height="180" rx="22" fill="#16243A" stroke="#64748B" stroke-width="2" filter="url(#shadow)"/>
+  <text x="215" y="285" text-anchor="middle" fill="#F8FAFC" font-family="Microsoft YaHei, sans-serif" font-size="28" font-weight="700">用户态</text>
+  <text x="215" y="335" text-anchor="middle" fill="#94A3B8" font-family="Microsoft YaHei, sans-serif" font-size="22">cat / echo</text>
+  <rect x="400" y="215" width="300" height="180" rx="22" fill="#16243A" stroke="#64748B" stroke-width="2" filter="url(#shadow)"/>
+  <text x="550" y="285" text-anchor="middle" fill="#F8FAFC" font-family="Microsoft YaHei, sans-serif" font-size="28" font-weight="700">/proc 文件</text>
+  <text x="550" y="335" text-anchor="middle" fill="#94A3B8" font-family="Microsoft YaHei, sans-serif" font-size="22">read / write</text>
+  <path d="M340 305 H390" stroke="#CBD5E1" stroke-width="4" marker-end="url(#arrow)"/><path d="M710 305 H760" stroke="#CBD5E1" stroke-width="4" marker-end="url(#arrow)"/>
+  <rect x="770" y="175" width="740" height="560" rx="26" fill="#111C31" stroke="#64748B" stroke-width="2" filter="url(#shadow)"/>
+  <text x="815" y="230" fill="#F8FAFC" font-family="Microsoft YaHei, sans-serif" font-size="27" font-weight="700">内核处理路径</text>
+  <rect x="815" y="270" width="310" height="195" rx="18" fill="#1D3557" stroke="#3984C6" stroke-width="2"/>
+  <rect x="1150" y="270" width="310" height="195" rx="18" fill="#3A2430" stroke="#E26D5A" stroke-width="2"/>
+  <text x="970" y="315" text-anchor="middle" fill="#62B6E8" font-family="Microsoft YaHei, sans-serif" font-size="25" font-weight="700">C 版</text>
+  <text x="1305" y="315" text-anchor="middle" fill="#F5A65B" font-family="Microsoft YaHei, sans-serif" font-size="25" font-weight="700">Rust 版</text>
+  <g font-family="Microsoft YaHei, sans-serif" font-size="21" fill="#F8FAFC"><text x="845" y="360">mutex_lock / unlock</text><text x="845" y="400">kstrtol + ret 检查</text><text x="845" y="440">scnprintf + %ld</text><text x="1180" y="360">AtomicI64 / AtomicU64</text><text x="1180" y="400">parse&lt;i64&gt; + match</text><text x="1180" y="440">write! + 有界 writer</text></g>
+  <path d="M1125 367 H1140" stroke="#CBD5E1" stroke-width="3" marker-end="url(#arrow)"/>
+  <rect x="815" y="515" width="645" height="150" rx="18" fill="#172B3A"/>
+  <text x="1137" y="565" text-anchor="middle" fill="#A7F3D0" font-family="Microsoft YaHei, sans-serif" font-size="27" font-weight="700">非法输入 → INVALID_COUNT + -EINVAL</text>
+  <text x="1137" y="615" text-anchor="middle" fill="#CBD5E1" font-family="Microsoft YaHei, sans-serif" font-size="21">失败路径被显式表达，计数器保持有效状态</text>
+  <path d="M1050 466 V505" stroke="#CBD5E1" stroke-width="3" marker-end="url(#arrow)"/><path d="M1305 466 V505" stroke="#CBD5E1" stroke-width="3" marker-end="url(#arrow)"/>
+  <text x="90" y="830" fill="#94A3B8" font-family="Microsoft YaHei, sans-serif" font-size="21">核心收益：把并发、解析、格式化的“人工约定”前置为类型和 API 约束</text>
+</svg>

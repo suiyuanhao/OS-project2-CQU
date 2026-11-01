@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+  <title id="title">实验四：字符设备驱动架构</title>
+  <desc id="desc">展示用户通过设备文件进行 open、read、write、close，C shim 适配 Linux，Rust 核心处理边界、原子计数和生命周期。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#0B1220"/><stop offset="1" stop-color="#17233D"/></linearGradient>
+    <linearGradient id="blue" x1="0" x2="1"><stop stop-color="#3984C6"/><stop offset="1" stop-color="#62B6E8"/></linearGradient>
+    <linearGradient id="orange" x1="0" x2="1"><stop stop-color="#E26D5A"/><stop offset="1" stop-color="#F5A65B"/></linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="12" stdDeviation="14" flood-color="#000" flood-opacity=".28"/></filter>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="#CBD5E1"/></marker>
+  </defs>
+  <rect width="1600" height="900" fill="url(#bg)"/>
+  <text x="85" y="95" fill="#F8FAFC" font-family="Microsoft YaHei, sans-serif" font-size="40" font-weight="700">实验四 · 字符设备驱动</text>
+  <text x="85" y="140" fill="#94A3B8" font-family="Microsoft YaHei, sans-serif" font-size="22">Linux 设备接口由 C 适配，安全核心由 Rust 承接</text>
+  <rect x="85" y="255" width="250" height="300" rx="24" fill="#16243A" stroke="#64748B" stroke-width="2" filter="url(#shadow)"/>
+  <text x="210" y="315" text-anchor="middle" fill="#F8FAFC" font-family="Microsoft YaHei, sans-serif" font-size="28" font-weight="700">用户态</text>
+  <g font-family="Consolas, Microsoft YaHei, sans-serif" font-size="23" fill="#A7F3D0"><text x="210" y="375" text-anchor="middle">open()</text><text x="210" y="420" text-anchor="middle">read()</text><text x="210" y="465" text-anchor="middle">write()</text><text x="210" y="510" text-anchor="middle">close()</text></g>
+  <path d="M335 405 H425" stroke="#CBD5E1" stroke-width="4" marker-end="url(#arrow)"/>
+  <rect x="445" y="215" width="300" height="380" rx="24" fill="#1D3557" stroke="#3984C6" stroke-width="2" filter="url(#shadow)"/>
+  <text x="595" y="280" text-anchor="middle" fill="#62B6E8" font-family="Microsoft YaHei, sans-serif" font-size="28" font-weight="700">C shim</text>
+  <text x="595" y="335" text-anchor="middle" fill="#F8FAFC" font-family="Microsoft YaHei, sans-serif" font-size="22">file_operations</text>
+  <text x="595" y="380" text-anchor="middle" fill="#F8FAFC" font-family="Microsoft YaHei, sans-serif" font-size="22">misc_register</text>
+  <text x="595" y="425" text-anchor="middle" fill="#F8FAFC" font-family="Microsoft YaHei, sans-serif" font-size="22">copy_from_user</text>
+  <text x="595" y="490" text-anchor="middle" fill="#94A3B8" font-family="Microsoft YaHei, sans-serif" font-size="20">窄 FFI 入口</text>
+  <path d="M745 405 H825" stroke="#CBD5E1" stroke-width="4" marker-end="url(#arrow)"/>
+  <rect x="845" y="175" width="665" height="500" rx="26" fill="#111C31" stroke="#E26D5A" stroke-width="2" filter="url(#shadow)"/>
+  <text x="890" y="235" fill="#F5A65B" font-family="Microsoft YaHei, sans-serif" font-size="28" font-weight="700">Rust 核心</text>
+  <g font-family="Microsoft YaHei, sans-serif" font-size="22" fill="#F8FAFC"><rect x="890" y="275" width="275" height="105" rx="16" fill="#3A2430"/><text x="1027" y="320" text-anchor="middle">slice + UTF-8</text><text x="1027" y="353" text-anchor="middle" fill="#CBD5E1" font-size="18">带长度的输入边界</text><rect x="1190" y="275" width="275" height="105" rx="16" fill="#3A2430"/><text x="1327" y="320" text-anchor="middle">write! + BufferWriter</text><text x="1327" y="353" text-anchor="middle" fill="#CBD5E1" font-size="18">类型与容量检查</text><rect x="890" y="420" width="275" height="105" rx="16" fill="#173B3A"/><text x="1027" y="465" text-anchor="middle">Atomic counters</text><text x="1027" y="498" text-anchor="middle" fill="#CBD5E1" font-size="18">open/read/write 计数</text><rect x="1190" y="420" width="275" height="105" rx="16" fill="#173B3A"/><text x="1327" y="465" text-anchor="middle">Drop</text><text x="1327" y="498" text-anchor="middle" fill="#CBD5E1" font-size="18">自动调用设备注销</text></g>
+  <path d="M1027 380 V410" stroke="#CBD5E1" stroke-width="3" marker-end="url(#arrow)"/><path d="M1327 380 V410" stroke="#CBD5E1" stroke-width="3" marker-end="url(#arrow)"/>
+  <text x="85" y="825" fill="#94A3B8" font-family="Microsoft YaHei, sans-serif" font-size="21">重点：把裸指针、长度检查、计数和注销集中在小而明确的边界内</text>
+</svg>
