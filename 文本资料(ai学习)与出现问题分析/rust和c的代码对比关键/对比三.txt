@@ -1,0 +1,40 @@
+# 实验三总结：/proc 指令分发模块的 C 与 Rust 全方位对比
+
+## 1. 实验背景与目的
+本实验（`07`）是 `/proc` 计数器实验（`06`）的进阶版。实验二仅接收数字并修改计数器，而实验三要求内核模块能够解析并执行复杂的用户指令（如 `inc`、`dec`、`reset` 或直接写入数字）。本实验的核心目的在于：在内核态进行复杂的逻辑分支与指令分发时，对比 C 语言与 Rust 语言在并发控制、字符串解析、类型安全与生命周期管理上的巨大差异，深刻体会 Rust 语言在系统级开发中的安全优势。
+
+## 2. 核心代码与特性深度剖析
+
+在复杂的指令分发过程中，如何安全地修改全局计数器是首要难题。对于并发安全，C 语言依靠手动加锁。在代码中，必须先用 `mutex_lock(&counter_lock);` 手动加锁，然后进入由 `strcmp` 构成的多层 `if-else` 指令分发链。逻辑分支一旦增多，程序员极易在某个分支中提前 `return` 而忘记写 `mutex_unlock(&counter_lock);`，一旦发生，整个内核瞬间死锁。而 Rust 语言则没有 `mutex_lock` 的影子，直接使用 `Atomic` 原子操作。如下面 Rust 代码所示，无论是 `COUNTER.fetch_add(1, Ordering::Relaxed);` 还是 `COUNTER.store(0, Ordering::Relaxed);`，这种操作底层依赖 CPU 硬件指令，从物理层面不存在锁的概念，即便逻辑再复杂、提前返回，也绝不可能死锁，且性能远超互斥锁。
+
+在字符串解析方面，C 语言必须依赖 `ret = kstrtol(kbuf, 10, &value);` 的返回值（错误码）做二次判断。一旦忘记检查返回值，垃圾值就会被写入内核变量，导致后续崩溃。而 Rust 语言利用如下模式匹配精髓：`} else if let Ok(value) = input.parse::<i64>() { COUNTER.store(value, Ordering::Relaxed); } else { INVALID_COUNT.fetch_add(1, Ordering::Relaxed); return -EINVAL; }`。它将校验与提取合二为一，解析成功则自动提取 `value`，解析失败则自动掉入最终的 `else` 兜底分支，编译器强制要求处理所有分支，杜绝了漏判。
+
+在格式化输出上，C 语言使用 `scnprintf(kbuf, sizeof(kbuf), "counter = %ld\n", counter);` 和 `%ld` 占位符，C 编译器不严格检查类型匹配，写错会导致未定义行为。而 Rust 的 `write!(&mut out, "counter = {}\n", COUNTER.load(Ordering::Relaxed));` 宏在编译期会严格比对占位符与变量类型，类型不对直接编译报错，掐断漏洞源头。在模块生命周期管理上，C 语言必须手动写 `__exit` 函数调用 `proc_remove(proc_entry);`，忘记写则 `/proc` 节点永久残留。而 Rust 只需实现 `impl Drop for RustProcCommand { fn drop(&mut self) { unsafe { rust_cmd_proc_exit(); } } }`，当模块卸载时，编译器保证自动调用 `drop` 清理资源（RAII 机制），想忘都忘不掉。
+
+## 3. 实验核心结论与差异化总结
+
+实验二证明了在简单数值读写中，Rust 的 `Atomic` 比 C 的 `Mutex` 更安全、无锁；而实验三则证明了在复杂的指令分发与文本解析中，Rust 的 `if let` 模式匹配和原子操作，彻底碾碎了 C 语言里的 `strcmp` 嵌套地狱和锁维护灾难。
+
+答辩高光话术：老师，第三个实验让我看到了 Rust 在逻辑控制流上的绝对统治力。在 C 语言的指令分发中，复杂的 `if-else` 分支和 `strcmp` 链条让 `mutex_lock` 的维护变得极度脆弱，稍有不慎就是死锁。而 Rust 的 `Atomic` 原子操作绕过了锁的概念，逻辑再复杂也绝对安全。同时，Rust 的 `if let Ok(value)` 模式匹配，把“尝试解析”和“成功提取”极其优雅地结合在一起。在 C 语言里，安全性靠程序员的记性和层层 `if` 检查；在 Rust 里，安全性由语言特性和编译器强制保证。这就是我选择 Rust 作为内核开发语言的底气。
+
+## 4. 附录：终端演示与验证命令
+```bash
+# 1. 加载模块
+sudo insmod ./07-rust-proc-command/rust_proc_command.ko
+
+# 2. 查看初始状态（确认 /proc/rust_lab_cmd_counter 生成）
+cat /proc/rust_lab_cmd_counter
+
+# 3. 指令测试
+echo "inc" > /proc/rust_lab_cmd_counter        # 加 1
+echo "dec" > /proc/rust_lab_cmd_counter        # 减 1
+echo "reset" > /proc/rust_lab_cmd_counter      # 清零
+echo "999" > /proc/rust_lab_cmd_counter        # 设为 999
+
+# 4. 非法输入测试（验证安全兜底）
+echo "hello_rust" > /proc/rust_lab_cmd_counter 
+# 终端提示错误，但内核未崩溃
+cat /proc/rust_lab_cmd_counter # 观察 invalid_count 是否加 1
+
+# 5. 卸载模块
+sudo rmmod rust_proc_command

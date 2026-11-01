@@ -1,0 +1,43 @@
+# 实验环境排障记录：虚拟机网络中断与恢复
+
+## 一、 故障现象
+
+在本次实验的后期，虚拟机（openEuler）在重启后出现了网络中断故障。具体表现为：
+1. 虚拟机能够正常启动并进入命令行。
+2. 核心服务 `sshd` 运行正常，执行 `sudo systemctl status sshd` 显示 `active (running)`，且日志显示正在监听 `0.0.0.0:22` 端口。
+3. 宿主机（Windows）的 VS Code 无法通过 SSH 连接到虚拟机。
+4. 在虚拟机内执行 `ip addr`，发现核心网卡 `ens33` 处于 `DOWN` 状态（`<BROADCAST,MULTICAST>`），且没有分配任何 IPv4 地址。
+
+## 二、 故障排查与解决步骤
+
+针对上述现象，进行了自底向上的逐层排查：
+
+**1. 唤醒底层网卡设备**
+*   **操作**：执行 `sudo ip link set dev ens33 up`。
+*   **现象**：系统日志提示 `ens33 NIC Link is Up 1000 Mbps Full Duplex`，底层硬件链路成功激活，但网卡依然没有获取到 IP 地址。
+
+**2. 尝试通过 NetworkManager 激活连接**
+*   **操作**：执行 `sudo nmcli connection up ens33`。
+*   **报错**：`Error: Connection activation failed: No suitable device found for this connection (device lo not available because device is strictly unmanaged).` 说明 NetworkManager 拒绝接管该网卡。
+
+**3. 检查并开启网络管理全局开关**
+*   **排查**：执行 `nmcli networking`，发现输出为空（未显示 `enabled`），这说明 NetworkManager 的全局网络托管功能被意外禁用了。这通常是由于虚拟机休眠/挂起，或宿主机网络环境变动导致的状态不同步。
+*   **解决**：
+    1. 执行 `sudo nmcli networking on` 开启全局网络托管。
+    2. 重新执行 `sudo nmcli connection up ens33`。
+*   **结果**：终端提示绿色的 `Connection successfully activated (D-Bus active path: ...)`，网卡成功获取 IP，SSH 连接恢复正常。
+
+**4. 预防措施**
+为了防止此类问题在后续重启中复发，执行了 `sudo systemctl enable NetworkManager` 确保服务开机自启，并通过 `sudo nmcli connection modify ens33 connection.autoconnect yes` 将网卡设置为开机自动连接。
+
+## 三、 排障总结与汇报话术
+
+**技术总结：**
+本次故障并非内核模块代码问题，而是操作系统网络管理层（NetworkManager）的状态异常。排查过程遵循了从“底层物理链路（`ip link`）”到“网络管理协议（`nmcli`）”的排查逻辑。操作系统的各个组件（硬件、驱动、网络管理服务）是紧密耦合的，遇到问题必须分层定位。
+
+**（建议在汇报时使用的答辩话术）：**
+> “老师，在实验过程中，我不仅完成了内核模块的开发，还独立排查了一次虚拟机的底层网络故障。
+> 
+> 一开始我以为是 SSH 服务坏了，但通过 `ip addr`，我定位到是底层网卡 `ens33` 掉线了。在尝试用 `nmcli` 激活时，系统报错 `strictly unmanaged`。进一步排查发现，是虚拟机的 NetworkManager 全局网络托管开关在重启后意外关闭了。通过执行 `nmcli networking on` 并重新激活网卡，彻底解决了问题。
+> 
+> **这次排障让我深刻体会到：遇到问题不能盲目重启，必须像剥洋葱一样，从底层链路查到上层协议。这种自底向上的排查思维，对我未来进行系统级开发非常有帮助。**”
